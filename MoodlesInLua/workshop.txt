@@ -1,0 +1,8 @@
+version=1
+id=3395171770
+title=Moodles in lua [B42]
+description=This mod completely replaces moodles rendering system, thus allowing more customization and fixing some bugs, but at the moment it lacks some features that are in the original system, they will be implemented later
+description=Workshop ID: 3395171770
+description=Modification ID: moodlesinlua
+tags=Build 42;Framework;Interface;WIP
+visibility=public
