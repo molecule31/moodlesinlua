@@ -1,0 +1,23 @@
+version=1
+id=3391323469
+title=Quarter border for moodles [B42]
+description=Will not work without [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3395171770]Moodles in lua[/url]
+description=
+description=Essential for my [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3386486141]old moodles mod[/url] but if you prefer new moodles you can skip this one, and yes it is compatible with other moodles mods
+description=
+description=Example:[img]https://i.imgur.com/7bFl6LJ.png[/img]
+description=
+description=[hr]
+description=[b]FAQ[/b]
+description=
+description=[quote][h3]If border and moodles seems blurry then set in Settings > User Interface (UI) > Moodle Size to 64 or 128 if you want them bigger.[/h3][/quote]
+description=
+description=[quote][h3]If the moodles didn't appear, apply them in mods and add them to the game save too, restart the game and they should appear. if you have several mods that change moodles, select only one to make them work correctly and mods that change borders will not be displayed[/h3][/quote]
+description=
+description=kudos to [url=https://steamcommunity.com/id/DahakaMVl]DahakaMVl[/url] for [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2854030563]original Moodle Quarters[/url]
+description=
+description=License:  [url=http://theindiestone.com/forums/index.php/topic/2530-mod-permissions/#entry36476]Free for all[/URL]
+description=Workshop ID: 3391323469
+description=Mod ID: quarterbordermoodles
+tags=Build 42;Interface;QoL
+visibility=public
