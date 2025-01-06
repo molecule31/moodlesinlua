@@ -1,8 +1,0 @@
-name=Moodle Customization Framework
-id=MoodleCustomizationFramework
-description=Creates a custom rendered version of the moodle system with more customization options and improved functionality.
-poster=poster.png
-icon=icon.png
-author=Dreamweave
-versionMin=42.0.0
-modversion=1
