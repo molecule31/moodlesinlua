@@ -40,6 +40,8 @@ function ISMoodlesInLua:new()
     o.moodlesDistance = 10
     o.tooltipPadding = 1
 
+    o.tooltipXOffset = 5 -- Can be used to add a larger gap between the tooltip and moodle.
+
     o.moodleAlpha = 1.0
 
     o.previousMoodleLevels = {}
@@ -84,7 +86,7 @@ function ISMoodlesInLua:registerTextureSet(name, path)
 
     -- Add to dropdown menu and options
     local MILModOptions = PZAPI.ModOptions:getOptions("MoodlesInLua")
-    local BorderTextureDropdown = MILModOptions and MILModOptions:getOption("BorderTextureSet")
+    local BorderTextureDropdown = MILModOptions and MILModOptions:getOption("MoodleBorderSet")
 
     if BorderTextureDropdown then
         BorderTextureDropdown:addItem(name, false)
@@ -97,11 +99,11 @@ end
 
 
 function ISMoodlesInLua:getTexturePath(goodBadNeutralId, moodleLevel)
-    local basePath = "media/ui/MIL/"
+    local basePath = "media/ui/MIL/Default"
 
     -- Find the registered texture set
     for _, set in ipairs(self.textureSets) do
-        if set.name == self.currentBorderTextureSet then
+        if set.name == self.currentMoodleBorderSet then
             basePath = set.path
             break
         end
@@ -154,7 +156,7 @@ function ISMoodlesInLua:getMoodleSize()
 end
 
 function ISMoodlesInLua:updateMoodleBorderType(newType)
-    self.currentBorderTextureSet = newType
+    self.currentMoodleBorderSet = newType
 end
 
 function ISMoodlesInLua:drawMoodleTooltip(moodles, moodleId, moodleX, moodleY)
@@ -172,14 +174,12 @@ function ISMoodlesInLua:drawMoodleTooltip(moodles, moodleId, moodleX, moodleY)
     local descriptionHeight = getTextManager():MeasureStringY(UIFont.Small, description)
     local rectHeight = titleHeight + descriptionHeight + self.tooltipPadding * 4
     --local centerTooltipOnMoodle = (moodleSize > self.defaultMoodleSize) and (moodleSize - rectHeight) / 2 or 0
-    local anchorTooltipOnMoodle = (moodleSize > self.defaultMoodleSize) and (moodleSize - 56) / 2 or 0 --56 is the height of the vanilla tooltip
-    local tooltipXOffset = 0 -- Can be used to add a larger gap between the tooltip and moodle. 0 is default vanilla position
-
+    local anchorTooltipOnMoodle = math.floor((moodleSize - rectHeight) / 2)
     -- Draw Tooltip Rectangle
-    self:drawRect(moodleX - textLength - textPadding - tooltipXOffset, moodleY + anchorTooltipOnMoodle, textLength + textPadding, rectHeight, 0.6, 0, 0, 0)
+    self:drawRect(moodleX - textLength - textPadding - self.tooltipXOffset, moodleY + anchorTooltipOnMoodle, textLength + textPadding, rectHeight, 0.6, 0, 0, 0)
     -- Draw Tooltip Text & Description (not necessary when using moodlesUI:setVisible() state)
-    self:drawTextRight(title, moodleX - textPadding - tooltipXOffset, moodleY + self.tooltipPadding + anchorTooltipOnMoodle, 1, 1, 1, 1)
-    self:drawTextRight(description, moodleX - textPadding - tooltipXOffset, moodleY + titleHeight + self.tooltipPadding * 2 + anchorTooltipOnMoodle, 1, 1, 1, 0.7)
+    self:drawTextRight(title, moodleX - textPadding - self.tooltipXOffset, moodleY + self.tooltipPadding + anchorTooltipOnMoodle, 1, 1, 1, 1)
+    self:drawTextRight(description, moodleX - textPadding - self.tooltipXOffset, moodleY + titleHeight + self.tooltipPadding * 2 + anchorTooltipOnMoodle, 1, 1, 1, 0.7)
 end
 
 function ISMoodlesInLua:render()
@@ -189,14 +189,11 @@ function ISMoodlesInLua:render()
     --Ensures ISMoodlesInLua and MoodlesUI are active
     if not self.active or not moodlesUI then return end
 
-    --Disable Framework Functionality & Use Vanilla Moodle System If "Vanilla (Default)" Is Selected
-    moodlesUI:setDefaultDraw(self.currentBorderTextureSet == "Vanilla")
-    if self.currentBorderTextureSet == "Vanilla" then return end
+    --Disable Framework Functionality & Use Vanilla Moodle System If "Default" Is Selected
+    moodlesUI:setDefaultDraw(self.currentMoodleBorderSet == "Default")
+    if self.currentMoodleBorderSet == "Default" then return end
 
-    --[[ Doesn't Disable The Moodle Hover Tooltip Text For Some Reason?
-    moodlesUI:setVisible(self.currentBorderTextureSet == "Vanilla")
-    if self.currentBorderTextureSet == "Vanilla" then return end
-    --]]
+    --Vanilla moodles tooltip still displayed on pause? Anyway, it's a game bug
 
     local moodleSize = self:getMoodleSize()
     local x, y = moodlesUI:getAbsoluteX(), moodlesUI:getAbsoluteY()
@@ -297,28 +294,31 @@ end
 Events.OnCreatePlayer.Add(updateCharacter)
 
 
---[[MOD OPTIONS]]
 
-local vanillaOptions = PZAPI.ModOptions:create("MoodlesInLua", getText("Moodles In Lua"))
 
-local key = "BorderTextureSet"
+--[[MOD OPTIONS]]--
+
+local MILOptions = PZAPI.ModOptions:create("MoodlesInLua", getText("Moodles In Lua"))
+
+local borderkey = "MoodleBorderSet"
 local uiName = getText("Border texture pack:")
 
 BorderTextureOptions = {
-    [1] = "Vanilla",
+    [1] = "Default",
 }
 
-local BorderTextureSetDropdown = vanillaOptions:addComboBox(key, uiName, "tooltip")
-BorderTextureSetDropdown:addItem("Vanilla", true)
 
-function vanillaOptions:apply()
+local MoodleBorderSetDropdown = MILOptions:addComboBox(borderkey, uiName, "tooltip")
+MoodleBorderSetDropdown:addItem("Default", true)
+
+function MILOptions:apply()
     -- Release textures from the previous moodle set
-    if ISMoodlesInLuaHandle.currentBorderTextureSet then
+    if ISMoodlesInLuaHandle.currentMoodleBorderSet then
         ISMoodlesInLuaHandle:clearTextureCache()
     end
 
     -- Update to the new moodle set
-    local selectedIndex = self:getOption("BorderTextureSet"):getValue()
+    local selectedIndex = self:getOption("MoodleBorderSet"):getValue()
     local newType = BorderTextureOptions[selectedIndex]
     ISMoodlesInLuaHandle:updateMoodleBorderType(newType)
     ISMoodlesInLuaHandle:update()
@@ -328,6 +328,40 @@ local og_load = PZAPI.ModOptions.load
 PZAPI.ModOptions.load = function(self)
     og_load(self)
     pcall(function ()
-        vanillaOptions:apply()
+        MILOptions:apply()
     end)
+end
+
+
+
+
+--[[MOODLE FRAMEWORK COMPATIBILITY]]--
+
+require "MF_ISMoodle"
+
+if MF ~= nil then
+    local oldNew = MF.ISMoodle.new
+
+    function MF.ISMoodle.new(self, moodleName, character)
+        local o = oldNew(self, moodleName, character)
+
+        for g = 1, 2 do
+            for l = 1, 4 do
+                local goodBadNeutralId = g
+                local moodleLevel = l
+
+                -- Get the texture path from ISMoodlesInLua
+                local MFtexturePath = ISMoodlesInLuaHandle:getTexturePath(goodBadNeutralId, moodleLevel)
+                -- Load the texture
+                local MFtexture = getTexture(MFtexturePath)
+
+                if MFtexture then
+                    o:setBackground(g, l, MFtexture)  -- Set the background texture
+                else
+                    print("MIL: Texture not found for MF, path: " .. texturePath)
+                end
+            end
+        end
+        return o
+    end
 end
