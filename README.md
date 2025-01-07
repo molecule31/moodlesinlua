@@ -3,9 +3,8 @@ Moodles In Lua is a mod for Project Zomboid that changes the way moodles works, 
 
 TODO:
 - Oscillations
-- Tooltip centering
-- MF support
-- Stack positioning
+  - MF support / it now uses textures from MoodlesInLua, but still needs to update textures when :apply
+- Stack positioning 
 - Moodles texture hot swap?
 
 MIL 7 version hierarchy:
