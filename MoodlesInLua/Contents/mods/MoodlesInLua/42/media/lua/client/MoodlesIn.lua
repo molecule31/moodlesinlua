@@ -72,17 +72,17 @@ function ISMoodlesInLua:setCharacter(character)
     self.useCharacter = character
 end
 
-function ISMoodlesInLua:registerTextureSet(name, path)
+function ISMoodlesInLua:registerBorderTextureSet(name, path)
     -- Error Handling: Ensure texture set contains name and path
     if not name or not path then
-        error("MIL [registerTextureSet]: ERROR - Texture set registration requires both a name and a path.")
+        error("MIL [registerBorderTextureSet]: ERROR - Texture set registration requires both a name and a path.")
         return
     end
 
     -- Error Handling: Prevent duplicate entries
     for _, set in ipairs(self.textureSets) do
         if set.name == name then
-            print("MIL [registerTextureSet]: ERROR - Texture set '" .. name .. "' is already registered.")
+            print("MIL [registerBorderTextureSet]: ERROR - Texture set '" .. name .. "' is already registered.")
             return
         end
     end
@@ -97,14 +97,14 @@ function ISMoodlesInLua:registerTextureSet(name, path)
     if BorderTextureDropdown then
         BorderTextureDropdown:addItem(name, false)
     else
-        print("MIL [registerTextureSet]: ERROR - Moodle Background dropdown menu has not been initialized.")
+        print("MIL [registerBorderTextureSet]: ERROR - Moodle Background dropdown menu has not been initialized.")
     end
 
     table.insert(BorderTextureOptions, name)
 end
 
 
-function ISMoodlesInLua:getTexturePath(goodBadNeutralId, moodleLevel)
+function ISMoodlesInLua:getBorderTexturePath(goodBadNeutralId, moodleLevel)
     local basePath = "media/ui/MIL/Default"
 
     -- Find the registered texture set
@@ -282,7 +282,7 @@ function ISMoodlesInLua:render()
                 end
 
                 -- Draw moodle textures
-                local path = self:getTexturePath(goodBadNeutralId, moodleLevel)
+                local path = self:getBorderTexturePath(goodBadNeutralId, moodleLevel)
                 local texture = self:getTexture(path)
                 local moodleTexturePath = tostring(moodleType)
                 local moodleTexture = self:getTexture(self.moodlePaths[moodleTexturePath])
@@ -380,13 +380,14 @@ end
 require "MF_ISMoodle"
 
 if MF ~= nil then
+
     local oldNew = MF.ISMoodle.new
     MF.ISMoodle.instances = {} -- Table to store instances
 
     local function loadTextures(instance)
         for g = 1, 2 do
             for l = 1, 4 do
-                local MFtexturePath = ISMoodlesInLuaHandle:getTexturePath(g, l)
+                local MFtexturePath = ISMoodlesInLuaHandle:getBorderTexturePath(g, l)
                 local MFtexture = ISMoodlesInLuaHandle:getTexture(MFtexturePath)
 
                 if MFtexture then
