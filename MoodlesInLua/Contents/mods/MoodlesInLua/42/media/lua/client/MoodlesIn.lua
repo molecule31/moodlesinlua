@@ -46,6 +46,12 @@ function ISMoodlesInLua:new()
 
     o.previousMoodleLevels = {}
     o.moodleAnimations = {}
+    o.moodleOscillations =  {}
+
+    o.OscilatorScalar = 15.6;
+    o.OscilatorDecelerator = 0.16; -- 0.84 (in java is 0.96) = 0.16
+    o.OscilatorRate = 0.8;
+    o.OscilatorStep = 0;
 
     o.useCharacter = nil
     o.active = false
@@ -189,11 +195,8 @@ function ISMoodlesInLua:render()
     --Ensures ISMoodlesInLua and MoodlesUI are active
     if not self.active or not moodlesUI then return end
 
-    --Disable Framework Functionality & Use Vanilla Moodle System If "Default" Is Selected
-    moodlesUI:setDefaultDraw(self.currentMoodleBorderSet == "Default")
-    if self.currentMoodleBorderSet == "Default" then return end
-
-    --Vanilla moodles tooltip still displayed on pause? Anyway, it's a game bug
+    --Disables vanilla moodle system
+    moodlesUI:setDefaultDraw(false)
 
     local moodleSize = self:getMoodleSize()
     local x, y = moodlesUI:getAbsoluteX(), moodlesUI:getAbsoluteY()
@@ -208,17 +211,48 @@ function ISMoodlesInLua:render()
 
             local prevLevel = self.previousMoodleLevels[tostring(moodleType)] or 0
             self.previousMoodleLevels[tostring(moodleType)] = moodleLevel
+
             local baseY = y -- Save the starting Y for this moodle
             local animY = baseY -- Default to base Y if no animation
 
-            if moodleLevel > 0 --[[and not (moodleType == MoodleType.FoodEaten and moodleLevel < 3)]] then
+            if moodleLevel > 0 then
 
-                --[[ Wiggle Animation?
-                if moodleLevel ~= prevLevel and moodleLevel > 1 or prevLevel == 2 and moodleLevel == 1 then
+                -- Get frame time to use in animations
+                local deltaTime = UIManager.getMillisSinceLastUpdate() / 1000 -- Convert ms to seconds
+
+                -- Detect when apply oscillations
+                if moodleLevel ~= prevLevel and moodleLevel >= 1 then
+                    self.moodleOscillations[tostring(moodleType)] = 1
+                end
+
+                local oscillationOffset = 0
+
+                local oscillationDeltaTime = deltaTime * 33.3333
+                if not oscillationDeltaTime or oscillationDeltaTime <= 0 then oscillationDeltaTime = 1 end -- if below 30fps
+
+                local moodleOscillation = self.moodleOscillations[tostring(moodleType)] or 0
+
+                if moodleOscillation > 0 then
+
+                    self.moodleOscillations[tostring(moodleType)] = moodleOscillation - moodleOscillation * (self.OscilatorDecelerator) / oscillationDeltaTime -- decay
+
+                    if moodleOscillation <= 0.015 then -- saturate
+                        moodleOscillation = 0
+                    end
+
+                    if moodleOscillation > 0 then
+                        self.OscilatorStep = self.OscilatorStep + self.OscilatorRate / oscillationDeltaTime
+                        local Oscilator = math.sin(self.OscilatorStep)
+                        oscillationOffset = Oscilator * self.OscilatorScalar * moodleOscillation * 2 -- number should depend on moodleSize rather than static
+                    else
+                        oscillationOffset = 0
+                        OscilatorStep = 0
+                    end
 
                 end
-                ]]
 
+
+                -- Detect when apply start animation
                 if prevLevel == 0 and moodleLevel == 1 then
                     self.moodleAnimations[tostring(moodleType)] = {
                         progress = 0,
@@ -228,7 +262,6 @@ function ISMoodlesInLua:render()
                 end
 
                 -- Handle Start animation
-                local deltaTime = UIManager.getMillisSinceLastUpdate() / 1000 -- Convert ms to seconds
                 local anim = self.moodleAnimations[tostring(moodleType)]
                 if anim then
                     -- Update and clamp progress using time since last frame
@@ -255,8 +288,9 @@ function ISMoodlesInLua:render()
                 local moodleTexture = self:getTexture(self.moodlePaths[moodleTexturePath])
 
                 if texture then
-                    UIManager.DrawTexture(texture, x, y, moodleSize, moodleSize, self.moodleAlpha)
-                    UIManager.DrawTexture(moodleTexture, x, y, moodleSize, moodleSize, self.moodleAlpha)
+
+                    UIManager.DrawTexture(texture, x + oscillationOffset, y, moodleSize, moodleSize, self.moodleAlpha)
+                    UIManager.DrawTexture(moodleTexture, x + oscillationOffset, y, moodleSize, moodleSize, self.moodleAlpha)
                 end
 
                 -- Draw moodle tooltip on mouse hover
@@ -266,7 +300,7 @@ function ISMoodlesInLua:render()
                 end
 
                 -- Increment position for the next moodle
-                y = baseY + self.moodlesDistance + moodleSize
+                y = baseY + self.moodlesDistance + moodleSize -- should be height
             end
         end
     end
@@ -321,6 +355,12 @@ function MILOptions:apply()
     local selectedIndex = self:getOption("MoodleBorderSet"):getValue()
     local newType = BorderTextureOptions[selectedIndex]
     ISMoodlesInLuaHandle:updateMoodleBorderType(newType)
+
+    -- Update textures for all MF.ISMoodle instances
+    if MF ~= nil then
+        MF.ISMoodle.updateTextures()
+    end
+
     ISMoodlesInLuaHandle:update()
 end
 
@@ -341,27 +381,37 @@ require "MF_ISMoodle"
 
 if MF ~= nil then
     local oldNew = MF.ISMoodle.new
+    MF.ISMoodle.instances = {} -- Table to store instances
 
-    function MF.ISMoodle.new(self, moodleName, character)
-        local o = oldNew(self, moodleName, character)
-
+    local function loadTextures(instance)
         for g = 1, 2 do
             for l = 1, 4 do
-                local goodBadNeutralId = g
-                local moodleLevel = l
-
-                -- Get the texture path from ISMoodlesInLua
-                local MFtexturePath = ISMoodlesInLuaHandle:getTexturePath(goodBadNeutralId, moodleLevel)
-                -- Load the texture
-                local MFtexture = getTexture(MFtexturePath)
+                local MFtexturePath = ISMoodlesInLuaHandle:getTexturePath(g, l)
+                local MFtexture = ISMoodlesInLuaHandle:getTexture(MFtexturePath)
 
                 if MFtexture then
-                    o:setBackground(g, l, MFtexture)  -- Set the background texture
+                    instance:setBackground(g, l, MFtexture)  -- Set the background texture
                 else
-                    print("MIL: Texture not found for MF, path: " .. texturePath)
+                    print("MIL: Texture not found for MF, path: " .. MFtexturePath)
                 end
             end
         end
+    end
+
+    function MF.ISMoodle.new(self, moodleName, character)
+        local o = oldNew(self, moodleName, character)
+        table.insert(MF.ISMoodle.instances, o) -- Store the instance
+
+        -- Load textures for the new instance
+        loadTextures(o)
+
         return o
+    end
+
+    -- Function to update textures for all instances
+    function MF.ISMoodle.updateTextures()
+        for _, instance in ipairs(MF.ISMoodle.instances) do
+            loadTextures(instance) -- Update the background textures
+        end
     end
 end
