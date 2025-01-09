@@ -1,0 +1,14 @@
+version=1
+id=3402171609
+title=Simple Moodle Indicators
+description=Custom moodle backgrounds with transparency and level indicators for improved readability.
+description=
+description=Requires [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3395171770]Moodles in lua[/url];
+description=
+description=Example:
+description=[img]https://imgur.com/gallery/simple-moodle-indicators-22AZK2z[/img]
+description=
+description=Workshop ID: 3402171609
+description=Mod ID: SimpleMoodleIndicators
+tags=Build 42;Interface;QoL
+visibility=public
