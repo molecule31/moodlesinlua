@@ -44,6 +44,11 @@ function ISMoodlesInLua:new()
 
     o.moodleAlpha = 1.0
 
+    o.realBorderTextureSize = 128 -- Can be changed if real texture size is bigger or smaller
+
+    o.extraX = 0
+    o.extraY = 0
+
     o.previousMoodleLevels = {}
     o.moodleAnimations = {}
     o.moodleOscillations =  {}
@@ -200,6 +205,7 @@ function ISMoodlesInLua:render()
 
     local moodleSize = self:getMoodleSize()
     local x, y = moodlesUI:getAbsoluteX(), moodlesUI:getAbsoluteY()
+    local x, y = x + self.extraX, y + self.extraY
 
     local player = self.useCharacter
     if player and player:getMoodles() then
@@ -282,15 +288,24 @@ function ISMoodlesInLua:render()
                 end
 
                 -- Draw moodle textures
-                local path = self:getBorderTexturePath(goodBadNeutralId, moodleLevel)
-                local texture = self:getTexture(path)
+                local borderTexturePath = self:getBorderTexturePath(goodBadNeutralId, moodleLevel)
+                local borderTexture = self:getTexture(borderTexturePath)
                 local moodleTexturePath = tostring(moodleType)
                 local moodleTexture = self:getTexture(self.moodlePaths[moodleTexturePath])
 
-                if texture then
+                -- Get the original dimensions of the texture
+                local realWidth = borderTexture:getWidth()
+                local realHeight = borderTexture:getHeight()
 
-                    UIManager.DrawTexture(texture, x + oscillationOffset, y, moodleSize, moodleSize, self.moodleAlpha)
-                    UIManager.DrawTexture(moodleTexture, x + oscillationOffset, y, moodleSize, moodleSize, self.moodleAlpha)
+                local scaleFactor = moodleSize / self.realBorderTextureSize -- checks for default* texture size
+
+                -- Calculate the scaled dimensions
+                local scaledWidth = realWidth * scaleFactor
+                local scaledHeight = realHeight * scaleFactor
+
+                if borderTexture then
+                    UIManager.DrawTexture(borderTexture, x + oscillationOffset, y, scaledWidth, scaledHeight, self.moodleAlpha) -- border
+                    UIManager.DrawTexture(moodleTexture, x + oscillationOffset, y, moodleSize, moodleSize, self.moodleAlpha) -- moodle
                 end
 
                 -- Draw moodle tooltip on mouse hover
