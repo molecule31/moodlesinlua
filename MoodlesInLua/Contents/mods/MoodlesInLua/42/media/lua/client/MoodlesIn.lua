@@ -37,17 +37,22 @@ function ISMoodlesInLua:new()
         ["Hypothermia"] = "media/ui/Moodles/Status_TemperatureLow.png"
     }
 
-    o.moodlesDistance = 10
-    o.tooltipPadding = 1
+    -- Set options to defaults
+    o.defaultOptions = {
+        offsetX = 0,
+        offsetY = 0,
+        realBorderTextureSize = 128,
+        moodleAlpha = 1.0,
+        moodlesDistance = 10,
+        tooltipPadding = 1,
+        tooltipXOffset = 5,
+    }
 
-    o.tooltipXOffset = 5 -- Can be used to add a larger gap between the tooltip and moodle.
+    -- Instance options that will be applied
+    o.options = {}
 
-    o.moodleAlpha = 1.0
-
-    o.realBorderTextureSize = 128 -- Can be changed if real texture size is bigger or smaller
-
-    o.extraX = 0
-    o.extraY = 0
+    -- Set initial state for options to defaults
+    o:applyOptions()
 
     o.previousMoodleLevels = {}
     o.moodleAnimations = {}
@@ -77,7 +82,14 @@ function ISMoodlesInLua:setCharacter(character)
     self.useCharacter = character
 end
 
-function ISMoodlesInLua:registerBorderTextureSet(name, path)
+function ISMoodlesInLua:applyOptions(options)
+    -- Apply options by overwriting defaults with custom values if they exist
+    for key, defaultValue in pairs(self.defaultOptions) do
+        self.options[key] = (options and options[key]) or defaultValue
+    end
+end
+
+function ISMoodlesInLua:registerBorderTextureSet(name, path, options)
     -- Error Handling: Ensure texture set contains name and path
     if not name or not path then
         error("MIL [registerBorderTextureSet]: ERROR - Texture set registration requires both a name and a path.")
@@ -93,7 +105,7 @@ function ISMoodlesInLua:registerBorderTextureSet(name, path)
     end
 
     -- Cache texture set name and path
-    table.insert(self.textureSets, { name = name, path = path })
+    table.insert(self.textureSets, { name = name, path = path, options = options or {} })
 
     -- Add to dropdown menu and options
     local MILModOptions = PZAPI.ModOptions:getOptions("MoodlesInLua")
@@ -121,6 +133,14 @@ function ISMoodlesInLua:getBorderTexturePath(goodBadNeutralId, moodleLevel)
     end
 
     return string.format("%s/%s_%d.png", basePath, goodBadNeutralId == 1 and "Good" or goodBadNeutralId == 2 and "Bad" or "Neutral", moodleLevel)
+end
+
+function ISMoodlesInLua:getBorderTextureOptions()
+    for _, set in ipairs(self.textureSets) do
+        if set.name == self.currentMoodleBorderSet then
+            return set.options  -- Return the options associated with the current texture set
+        end
+    end
 end
 
 function ISMoodlesInLua:getTexture(path)
@@ -183,14 +203,14 @@ function ISMoodlesInLua:drawMoodleTooltip(moodles, moodleId, moodleX, moodleY)
 
     local titleHeight = getTextManager():MeasureStringY(UIFont.Small, title)
     local descriptionHeight = getTextManager():MeasureStringY(UIFont.Small, description)
-    local rectHeight = titleHeight + descriptionHeight + self.tooltipPadding * 4
+    local rectHeight = titleHeight + descriptionHeight + self.options.tooltipPadding * 4
     --local centerTooltipOnMoodle = (moodleSize > self.defaultMoodleSize) and (moodleSize - rectHeight) / 2 or 0
     local anchorTooltipOnMoodle = math.floor((moodleSize - rectHeight) / 2)
     -- Draw Tooltip Rectangle
-    self:drawRect(moodleX - textLength - textPadding - self.tooltipXOffset, moodleY + anchorTooltipOnMoodle, textLength + textPadding, rectHeight, 0.6, 0, 0, 0)
+    self:drawRect(moodleX - textLength - textPadding - self.options.tooltipXOffset, moodleY + anchorTooltipOnMoodle, textLength + textPadding, rectHeight, 0.6, 0, 0, 0)
     -- Draw Tooltip Text & Description (not necessary when using moodlesUI:setVisible() state)
-    self:drawTextRight(title, moodleX - textPadding - self.tooltipXOffset, moodleY + self.tooltipPadding + anchorTooltipOnMoodle, 1, 1, 1, 1)
-    self:drawTextRight(description, moodleX - textPadding - self.tooltipXOffset, moodleY + titleHeight + self.tooltipPadding * 2 + anchorTooltipOnMoodle, 1, 1, 1, 0.7)
+    self:drawTextRight(title, moodleX - textPadding - self.options.tooltipXOffset, moodleY + self.options.tooltipPadding + anchorTooltipOnMoodle, 1, 1, 1, 1)
+    self:drawTextRight(description, moodleX - textPadding - self.options.tooltipXOffset, moodleY + titleHeight + self.options.tooltipPadding * 2 + anchorTooltipOnMoodle, 1, 1, 1, 0.7)
 end
 
 function ISMoodlesInLua:render()
@@ -205,7 +225,7 @@ function ISMoodlesInLua:render()
 
     local moodleSize = self:getMoodleSize()
     local x, y = moodlesUI:getAbsoluteX(), moodlesUI:getAbsoluteY()
-    local x, y = x + self.extraX, y + self.extraY
+    local x, y = x + self.options.offsetX, y + self.options.offsetY
 
     local player = self.useCharacter
     if player and player:getMoodles() then
@@ -297,15 +317,15 @@ function ISMoodlesInLua:render()
                 local realWidth = borderTexture:getWidth()
                 local realHeight = borderTexture:getHeight()
 
-                local scaleFactor = moodleSize / self.realBorderTextureSize -- checks for default* texture size
+                local scaleFactor = moodleSize / self.options.realBorderTextureSize -- checks for default* texture size
 
                 -- Calculate the scaled dimensions
                 local scaledWidth = realWidth * scaleFactor
                 local scaledHeight = realHeight * scaleFactor
 
                 if borderTexture then
-                    UIManager.DrawTexture(borderTexture, x + oscillationOffset, y, scaledWidth, scaledHeight, self.moodleAlpha) -- border
-                    UIManager.DrawTexture(moodleTexture, x + oscillationOffset, y, moodleSize, moodleSize, self.moodleAlpha) -- moodle
+                    UIManager.DrawTexture(borderTexture, x + oscillationOffset, y, scaledWidth, scaledHeight, self.options.moodleAlpha) -- border
+                    UIManager.DrawTexture(moodleTexture, x + oscillationOffset, y, moodleSize, moodleSize, self.options.moodleAlpha) -- moodle
                 end
 
                 -- Draw moodle tooltip on mouse hover
@@ -315,7 +335,7 @@ function ISMoodlesInLua:render()
                 end
 
                 -- Increment position for the next moodle
-                y = baseY + self.moodlesDistance + moodleSize -- should be height
+                y = baseY + self.options.moodlesDistance + moodleSize -- should be height
             end
         end
     end
@@ -370,6 +390,12 @@ function MILOptions:apply()
     local selectedIndex = self:getOption("MoodleBorderSet"):getValue()
     local newType = BorderTextureOptions[selectedIndex]
     ISMoodlesInLuaHandle:updateMoodleBorderType(newType)
+
+    -- Retrieve options for the current texture set
+    local options = ISMoodlesInLuaHandle:getBorderTextureOptions()
+
+    -- Update options
+    ISMoodlesInLuaHandle:applyOptions(options)
 
     -- Update textures for all MF.ISMoodle instances
     if MF ~= nil then
