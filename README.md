@@ -7,8 +7,10 @@ Moodles In Lua is a mod for Project Zomboid that changes the way moodles works, 
 - Advanced MF support
 
 ### Exposed options:
-- ```offsetX``` Adjusts the horizontal position of the moodles (X-axis offset)<br>
-- ```offsetY``` Adjusts the vertical position of the moodles (Y-axis offset)<br>
+- ```offsetX``` Adjusts the horizontal position (X-axis offset)<br>
+- ```offsetY``` Adjusts the vertical position (Y-axis offset)<br>
+- ```moodleOffsetX``` Adjusts the horizontal position of the moodle (X-axis offset)<br>
+- ```moodleOffsetY``` Adjusts the vertical position of the moodle (Y-axis offset)<br>
 - ```moodleAlpha``` Controls the overall opacity of the moodles (Alpha transparency level)<br>
 - ```moodlesDistance``` Sets the space between moodles<br>
 - ```tooltipPadding``` Defines the padding inside the tooltip for spacing around the text<br>
