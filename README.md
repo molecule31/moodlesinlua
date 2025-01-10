@@ -6,7 +6,6 @@ TODO:
 - Stack positioning 
 - Moodles texture hot swap?
 - more MF support
-- auto detect custom width height and scale them properly 
 
 MIL 7 version hierarchy:
 ```
