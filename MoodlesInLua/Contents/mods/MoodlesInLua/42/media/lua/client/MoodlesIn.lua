@@ -41,7 +41,6 @@ function ISMoodlesInLua:new()
     o.defaultOptions = {
         offsetX = 0,
         offsetY = 0,
-        realBorderTextureSize = 128,
         moodleAlpha = 1.0,
         moodlesDistance = 10,
         tooltipPadding = 1,
@@ -57,6 +56,7 @@ function ISMoodlesInLua:new()
     o.previousMoodleLevels = {}
     o.moodleAnimations = {}
     o.moodleOscillations =  {}
+    o.moodleOscillationsSteps = {}
 
     o.OscilatorScalar = 15.6;
     o.OscilatorDecelerator = 0.16; -- 0.84 (in java is 0.96) = 0.16
@@ -246,7 +246,7 @@ function ISMoodlesInLua:render()
                 -- Get frame time to use in animations
                 local deltaTime = UIManager.getMillisSinceLastUpdate() / 1000 -- Convert ms to seconds
 
-                -- Detect when apply oscillations
+                -- Detect when to apply oscillations
                 if moodleLevel ~= prevLevel and moodleLevel >= 1 then
                     self.moodleOscillations[tostring(moodleType)] = 1
                 end
@@ -254,28 +254,37 @@ function ISMoodlesInLua:render()
                 local oscillationOffset = 0
 
                 local oscillationDeltaTime = deltaTime * 33.3333
-                if not oscillationDeltaTime or oscillationDeltaTime <= 0 then oscillationDeltaTime = 1 end -- if below 30fps
+                if not oscillationDeltaTime or oscillationDeltaTime <= 0 then
+                    oscillationDeltaTime = 1  -- to prevent issues with very low frame rates
+                end
 
                 local moodleOscillation = self.moodleOscillations[tostring(moodleType)] or 0
 
                 if moodleOscillation > 0 then
+                    -- Decay the oscillation
+                    self.moodleOscillations[tostring(moodleType)] = moodleOscillation - moodleOscillation * (self.OscilatorDecelerator) / oscillationDeltaTime
 
-                    self.moodleOscillations[tostring(moodleType)] = moodleOscillation - moodleOscillation * (self.OscilatorDecelerator) / oscillationDeltaTime -- decay
-
-                    if moodleOscillation <= 0.015 then -- saturate
-                        moodleOscillation = 0
+                    -- Saturate the oscillation
+                    if self.moodleOscillations[tostring(moodleType)] <= 0.015 then
+                        self.moodleOscillations[tostring(moodleType)] = 0
                     end
 
-                    if moodleOscillation > 0 then
-                        self.OscilatorStep = self.OscilatorStep + self.OscilatorRate / oscillationDeltaTime
-                        local Oscilator = math.sin(self.OscilatorStep)
-                        oscillationOffset = Oscilator * self.OscilatorScalar * moodleOscillation * 2 -- number should depend on moodleSize rather than static
+                    if self.moodleOscillations[tostring(moodleType)] > 0 then
+                        -- Each moodleType gets its own OscilatorStep
+                        local OscilatorStep = self.moodleOscillationsSteps[tostring(moodleType)] or 0
+
+                        -- Update the OscilatorStep and store it for the specific moodleType
+                        OscilatorStep = OscilatorStep + self.OscilatorRate / oscillationDeltaTime
+                        self.moodleOscillationsSteps[tostring(moodleType)] = OscilatorStep
+
+                        -- Apply the oscillation offset
+                        local Oscilator = math.sin(OscilatorStep)
+                        oscillationOffset = Oscilator * self.OscilatorScalar * self.moodleOscillations[tostring(moodleType)] * 2
                     else
                         oscillationOffset = 0
-                        OscilatorStep = 0
                     end
-
                 end
+
 
 
                 -- Detect when apply start animation
@@ -307,24 +316,25 @@ function ISMoodlesInLua:render()
                     y = animY
                 end
 
-                -- Draw moodle textures
+                -- Moodles / borders logic
                 local borderTexturePath = self:getBorderTexturePath(goodBadNeutralId, moodleLevel)
                 local borderTexture = self:getTexture(borderTexturePath)
+
                 local moodleTexturePath = tostring(moodleType)
                 local moodleTexture = self:getTexture(self.moodlePaths[moodleTexturePath])
 
-                -- Get the original dimensions of the texture
-                local realWidth = borderTexture:getWidth()
-                local realHeight = borderTexture:getHeight()
+                -- Get the original dimensions of the Border texture
+                local realBorderWidth = borderTexture:getWidth()
+                local realBorderHeight = borderTexture:getHeight()
 
-                local scaleFactor = moodleSize / self.options.realBorderTextureSize -- checks for default* texture size
+                local scaleBorderFactor = moodleSize / 128 -- FIXME may need to rely on user defined parameters but textures in the game are 128x128, so it's better to use 128 as a default
 
                 -- Calculate the scaled dimensions
-                local scaledWidth = realWidth * scaleFactor
-                local scaledHeight = realHeight * scaleFactor
+                local scaledBorderWidth = realBorderWidth * scaleBorderFactor
+                local scaledBorderHeight = realBorderHeight * scaleBorderFactor
 
                 if borderTexture then
-                    UIManager.DrawTexture(borderTexture, x + oscillationOffset, y, scaledWidth, scaledHeight, self.options.moodleAlpha) -- border
+                    UIManager.DrawTexture(borderTexture, x + oscillationOffset, y, scaledBorderWidth, scaledBorderHeight, self.options.moodleAlpha) -- border
                     UIManager.DrawTexture(moodleTexture, x + oscillationOffset, y, moodleSize, moodleSize, self.options.moodleAlpha) -- moodle
                 end
 
@@ -335,7 +345,7 @@ function ISMoodlesInLua:render()
                 end
 
                 -- Increment position for the next moodle
-                y = baseY + self.options.moodlesDistance + moodleSize -- should be height
+                y = baseY + self.options.moodlesDistance + moodleSize
             end
         end
     end
