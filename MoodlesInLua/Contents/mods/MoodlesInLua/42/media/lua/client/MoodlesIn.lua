@@ -41,6 +41,8 @@ function ISMoodlesInLua:new()
     o.defaultOptions = {
         offsetX = 0,
         offsetY = 0,
+        moodleOffsetX = 0,
+        moodleOffsetY = 0,
         moodleAlpha = 1.0,
         moodlesDistance = 10,
         tooltipPadding = 1,
@@ -327,15 +329,19 @@ function ISMoodlesInLua:render()
                 local realBorderWidth = borderTexture:getWidth()
                 local realBorderHeight = borderTexture:getHeight()
 
-                local scaleBorderFactor = moodleSize / 128 -- FIXME may need to rely on user defined parameters but textures in the game are 128x128, so it's better to use 128 as a default
+                local scaleFactor = moodleSize / 128 -- FIXME may need to rely on user defined parameters but textures in the game are 128x128, so it's better to use 128 as a default
 
                 -- Calculate the scaled dimensions
-                local scaledBorderWidth = realBorderWidth * scaleBorderFactor
-                local scaledBorderHeight = realBorderHeight * scaleBorderFactor
+                local scaledBorderWidth = realBorderWidth * scaleFactor
+                local scaledBorderHeight = realBorderHeight * scaleFactor
+
+                -- Calculate distance with scaling
+                local moodleOffsetX = math.floor(self.options.moodleOffsetX * scaleFactor)
+                local moodleOffsetY = math.floor(self.options.moodleOffsetY * scaleFactor)
 
                 if borderTexture then
                     UIManager.DrawTexture(borderTexture, x + oscillationOffset, y, scaledBorderWidth, scaledBorderHeight, self.options.moodleAlpha) -- border
-                    UIManager.DrawTexture(moodleTexture, x + oscillationOffset, y, moodleSize, moodleSize, self.options.moodleAlpha) -- moodle
+                    UIManager.DrawTexture(moodleTexture, x + moodleOffsetX + oscillationOffset, y + moodleOffsetY, moodleSize, moodleSize, self.options.moodleAlpha) -- moodle
                 end
 
                 -- Draw moodle tooltip on mouse hover
