@@ -462,6 +462,7 @@ IconTextureOptions = {
     [1] = "Default",
 }
 
+MILOptions:addDescription("Select custom textures for moodles if they do not appear in the list, check if they are below moodles in lua in mod order")
 
 local MoodleBorderSetDropdown = MILOptions:addComboBox(borderKey, borderName, "tooltip")
 MoodleBorderSetDropdown:addItem("Default", true)
@@ -470,8 +471,8 @@ local MoodleIconSetDropdown = MILOptions:addComboBox(iconKey, iconName, "tooltip
 MoodleIconSetDropdown:addItem("Default", true)
 
 function MILOptions:apply()
-    -- Release textures from the previous texture set / Border
-    if ISMoodlesInLuaHandle.currentMoodleBorderSet then
+    -- Release textures from the previous texture set
+    if ISMoodlesInLuaHandle.currentMoodleBorderSet or ISMoodlesInLuaHandle.currentMoodleIconSet then
         ISMoodlesInLuaHandle:clearTextureCache()
     end
 
@@ -482,13 +483,6 @@ function MILOptions:apply()
 
     -- Retrieve options for the current texture set
     local options = ISMoodlesInLuaHandle:getBorderTextureOptions()
-
-    ----
-
-    -- Release textures from the previous texture set / Icon
-    if ISMoodlesInLuaHandle.currentMoodleIconSet then
-        ISMoodlesInLuaHandle:clearTextureCache()
-    end
 
     -- Update to the new icon set
     local selectedIconIndex = self:getOption("MoodleIconSet"):getValue()
