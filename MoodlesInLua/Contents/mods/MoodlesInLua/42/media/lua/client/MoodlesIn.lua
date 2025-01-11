@@ -269,7 +269,7 @@ function ISMoodlesInLua:drawMoodleTooltip(moodles, moodleId, moodleX, moodleY)
     local titleHeight = getTextManager():MeasureStringY(UIFont.Small, title)
     local descriptionHeight = getTextManager():MeasureStringY(UIFont.Small, description)
     local rectHeight = titleHeight + descriptionHeight + self.options.tooltipPadding * 4
-    --local centerTooltipOnMoodle = (moodleSize > self.defaultMoodleSize) and (moodleSize - rectHeight) / 2 or 0
+    --local anchorTooltipOnMoodle =
     local anchorTooltipOnMoodle = math.floor((moodleSize - rectHeight) / 2)
     -- Draw Tooltip Rectangle
     self:drawRect(moodleX - textLength - textPadding - self.options.tooltipOffsetX, moodleY + anchorTooltipOnMoodle, textLength + textPadding, rectHeight, 0.6, 0, 0, 0)

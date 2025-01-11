@@ -1,4 +1,4 @@
-name=Moodles in lua [Build 42]
+name=Moodles in lua
 id=moodlesinlua
 description=Disables rendering of vanilla moodles and draws new ones on top of them, does not work if you have only turned on this mod
 poster=poster.png
