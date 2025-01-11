@@ -46,7 +46,7 @@ function ISMoodlesInLua:new()
         moodleAlpha = 1.0,
         moodlesDistance = 10,
         tooltipPadding = 1,
-        tooltipXOffset = 5,
+        tooltipOffsetX = 5,
     }
 
     -- Instance options that will be applied
@@ -272,10 +272,10 @@ function ISMoodlesInLua:drawMoodleTooltip(moodles, moodleId, moodleX, moodleY)
     --local centerTooltipOnMoodle = (moodleSize > self.defaultMoodleSize) and (moodleSize - rectHeight) / 2 or 0
     local anchorTooltipOnMoodle = math.floor((moodleSize - rectHeight) / 2)
     -- Draw Tooltip Rectangle
-    self:drawRect(moodleX - textLength - textPadding - self.options.tooltipXOffset, moodleY + anchorTooltipOnMoodle, textLength + textPadding, rectHeight, 0.6, 0, 0, 0)
+    self:drawRect(moodleX - textLength - textPadding - self.options.tooltipOffsetX, moodleY + anchorTooltipOnMoodle, textLength + textPadding, rectHeight, 0.6, 0, 0, 0)
     -- Draw Tooltip Text & Description (not necessary when using moodlesUI:setVisible() state)
-    self:drawTextRight(title, moodleX - textPadding - self.options.tooltipXOffset, moodleY + self.options.tooltipPadding + anchorTooltipOnMoodle, 1, 1, 1, 1)
-    self:drawTextRight(description, moodleX - textPadding - self.options.tooltipXOffset, moodleY + titleHeight + self.options.tooltipPadding * 2 + anchorTooltipOnMoodle, 1, 1, 1, 0.7)
+    self:drawTextRight(title, moodleX - textPadding - self.options.tooltipOffsetX, moodleY + self.options.tooltipPadding + anchorTooltipOnMoodle, 1, 1, 1, 1)
+    self:drawTextRight(description, moodleX - textPadding - self.options.tooltipOffsetX, moodleY + titleHeight + self.options.tooltipPadding * 2 + anchorTooltipOnMoodle, 1, 1, 1, 0.7)
 end
 
 function ISMoodlesInLua:render()
@@ -462,13 +462,15 @@ IconTextureOptions = {
     [1] = "Default",
 }
 
-MILOptions:addDescription("Select custom textures for moodles if they do not appear in the list, check if they are below moodles in lua in mod order")
+MILOptions:addDescription("Select custom textures for moodles")
 
 local MoodleBorderSetDropdown = MILOptions:addComboBox(borderKey, borderName, "tooltip")
 MoodleBorderSetDropdown:addItem("Default", true)
 
 local MoodleIconSetDropdown = MILOptions:addComboBox(iconKey, iconName, "tooltip")
 MoodleIconSetDropdown:addItem("Default", true)
+
+MILOptions:addDescription("If new packs do not appear in the list, check if they are listed under the Moodles In Lua mod in Mod Order menu")
 
 function MILOptions:apply()
     -- Release textures from the previous texture set
