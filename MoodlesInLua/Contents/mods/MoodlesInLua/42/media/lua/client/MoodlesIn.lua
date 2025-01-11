@@ -8,41 +8,41 @@ function ISMoodlesInLua:new()
     o.defaultMoodleSize = 48
     o.moodleSizes = {[1] = 32,[2] = 48,[3] = 64,[4] = 80,[5] = 96,[6] = 128}
 
-    o.moodlePaths = {
-        ["Endurance"] = "media/ui/Moodles/Status_DifficultyBreathing.png",
-        ["Bleeding"] = "media/ui/Moodles/Status_Bleeding.png",
-        ["Angry"] = "media/ui/Moodles/Mood_Angry.png",
-        ["Stress"] = "media/ui/Moodles/Mood_Stressed.png",
-        ["Thirst"] = "media/ui/Moodles/Status_Thirst.png",
-        ["Panic"] = "media/ui/Moodles/Mood_Panicked.png",
-        ["Hungry"] = "media/ui/Moodles/Status_Hunger.png",
-        ["Injured"] = "media/ui/Moodles/Status_InjuredMinor.png",
-        ["Pain"] = "media/ui/Moodles/Mood_Pained.png",
-        ["Sick"] = "media/ui/Moodles/Mood_Nauseous.png",
-        ["Bored"] = "media/ui/Moodles/Mood_Bored.png",
-        ["Unhappy"] = "media/ui/Moodles/Mood_Sad.png",
-        ["Tired"] = "media/ui/Moodles/Mood_Sleepy.png",
-        ["HeavyLoad"] = "media/ui/Moodles/Status_HeavyLoad.png",
-        ["Drunk"] = "media/ui/Moodles/Mood_Drunk.png",
-        ["Wet"] = "media/ui/Moodles/Status_Wet.png",
-        ["HasACold"] = "media/ui/Moodles/Mood_Ill.png",
-        ["Dead"] = "media/ui/Moodles/Mood_Dead.png",
-        ["Zombie"] = "media/ui/Moodles/Mood_Zombified.png",
-        ["Windchill"] = "media/ui/Moodles/Status_Windchill.png",
-        ["CantSprint"] = "media/ui/Moodles/Status_MovementRestricted.png",
-        ["Uncomfortable"] = "media/ui/Moodles/Mood_Discomfort.png",
-        ["NoxiousSmell"] = "media/ui/Moodles/Mood_NoxiousSmell.png",
-        ["FoodEaten"] = "media/ui/Moodles/Status_Hunger.png",
-        ["Hyperthermia"] = "media/ui/Moodles/Status_TemperatureHot.png",
-        ["Hypothermia"] = "media/ui/Moodles/Status_TemperatureLow.png"
+    o.iconPaths = {
+        ["Endurance"]     = "Status_DifficultyBreathing",
+        ["Bleeding"]      = "Status_Bleeding",
+        ["Angry"]         = "Mood_Angry",
+        ["Stress"]        = "Mood_Stressed",
+        ["Thirst"]        = "Status_Thirst",
+        ["Panic"]         = "Mood_Panicked",
+        ["Hungry"]        = "Status_Hunger",
+        ["Injured"]       = "Status_InjuredMinor",
+        ["Pain"]          = "Mood_Pained",
+        ["Sick"]          = "Mood_Nauseous",
+        ["Bored"]         = "Mood_Bored",
+        ["Unhappy"]       = "Mood_Sad",
+        ["Tired"]         = "Mood_Sleepy",
+        ["HeavyLoad"]     = "Status_HeavyLoad",
+        ["Drunk"]         = "Mood_Drunk",
+        ["Wet"]           = "Status_Wet",
+        ["HasACold"]      = "Mood_Ill",
+        ["Dead"]          = "Mood_Dead",
+        ["Zombie"]        = "Mood_Zombified",
+        ["Windchill"]     = "Status_Windchill",
+        ["CantSprint"]    = "Status_MovementRestricted",
+        ["Uncomfortable"] = "Mood_Discomfort",
+        ["NoxiousSmell"]  = "Mood_NoxiousSmell",
+        ["FoodEaten"]     = "Status_Hunger",
+        ["Hyperthermia"]  = "Status_TemperatureHot",
+        ["Hypothermia"]   = "Status_TemperatureLow",
     }
 
     -- Set options to defaults
     o.defaultOptions = {
-        offsetX = 0,
-        offsetY = 0,
         moodleOffsetX = 0,
         moodleOffsetY = 0,
+        iconOffsetX = 0,
+        iconOffsetY = 0,
         moodleAlpha = 1.0,
         moodlesDistance = 10,
         tooltipPadding = 1,
@@ -68,7 +68,8 @@ function ISMoodlesInLua:new()
     o.useCharacter = nil
     o.active = false
 
-    o.textureSets = {}
+    o.borderTextureSets = {}
+    o.iconTextureSets = {}
     o.textureCache = {}
     return o
 end
@@ -91,6 +92,8 @@ function ISMoodlesInLua:applyOptions(options)
     end
 end
 
+--[[REGISTER BORDERS]]--
+
 function ISMoodlesInLua:registerBorderTextureSet(name, path, options)
     -- Error Handling: Ensure texture set contains name and path
     if not name or not path then
@@ -99,7 +102,7 @@ function ISMoodlesInLua:registerBorderTextureSet(name, path, options)
     end
 
     -- Error Handling: Prevent duplicate entries
-    for _, set in ipairs(self.textureSets) do
+    for _, set in ipairs(self.borderTextureSets) do
         if set.name == name then
             print("MIL [registerBorderTextureSet]: ERROR - Texture set '" .. name .. "' is already registered.")
             return
@@ -107,7 +110,7 @@ function ISMoodlesInLua:registerBorderTextureSet(name, path, options)
     end
 
     -- Cache texture set name and path
-    table.insert(self.textureSets, { name = name, path = path, options = options or {} })
+    table.insert(self.borderTextureSets, { name = name, path = path, options = options or {} })
 
     -- Add to dropdown menu and options
     local MILModOptions = PZAPI.ModOptions:getOptions("MoodlesInLua")
@@ -122,12 +125,11 @@ function ISMoodlesInLua:registerBorderTextureSet(name, path, options)
     table.insert(BorderTextureOptions, name)
 end
 
-
 function ISMoodlesInLua:getBorderTexturePath(goodBadNeutralId, moodleLevel)
     local basePath = "media/ui/MIL/Default"
 
     -- Find the registered texture set
-    for _, set in ipairs(self.textureSets) do
+    for _, set in ipairs(self.borderTextureSets) do
         if set.name == self.currentMoodleBorderSet then
             basePath = set.path
             break
@@ -138,12 +140,76 @@ function ISMoodlesInLua:getBorderTexturePath(goodBadNeutralId, moodleLevel)
 end
 
 function ISMoodlesInLua:getBorderTextureOptions()
-    for _, set in ipairs(self.textureSets) do
+    for _, set in ipairs(self.borderTextureSets) do
         if set.name == self.currentMoodleBorderSet then
             return set.options  -- Return the options associated with the current texture set
         end
     end
 end
+
+function ISMoodlesInLua:updateMoodleBorderType(newBorderType)
+    self.currentMoodleBorderSet = newBorderType
+end
+
+--[[END OF REGISTER BORDERS]]--
+
+
+
+--[[REGISTER ICONS]]--
+
+function ISMoodlesInLua:registerIconTextureSet(name, path)
+    -- Error Handling: Ensure texture set contains name and path
+    if not name or not path then
+        error("MIL [registerIconTextureSet]: ERROR - Texture set registration requires both a name and a path.")
+        return
+    end
+
+    -- Error Handling: Prevent duplicate entries
+    for _, set in ipairs(self.iconTextureSets) do
+        if set.name == name then
+            print("MIL [registerIconTextureSet]: ERROR - Texture set '" .. name .. "' is already registered.")
+            return
+        end
+    end
+
+    -- Cache texture set name and path
+    table.insert(self.iconTextureSets, { name = name, path = path })
+
+    -- Add to dropdown menu and options
+    local MILModOptions = PZAPI.ModOptions:getOptions("MoodlesInLua")
+    local IconTextureDropdown = MILModOptions and MILModOptions:getOption("MoodleIconSet")
+
+    if IconTextureDropdown then
+        IconTextureDropdown:addItem(name, false)
+    else
+        print("MIL [registerIconTextureSet]: ERROR - Moodle Background dropdown menu has not been initialized.")
+    end
+
+    table.insert(IconTextureOptions, name)
+end
+
+function ISMoodlesInLua:getIconTexturePath(moodleType)
+    local basePath = "media/ui/MIL/Default"
+    local iconName = self.iconPaths[tostring(moodleType)]
+
+    -- Find the registered texture set
+    for _, set in ipairs(self.iconTextureSets) do
+        if set.name == self.currentMoodleIconSet then
+            basePath = set.path
+            break
+        end
+    end
+
+    return string.format("%s/%s.png", basePath, iconName)
+end
+
+function ISMoodlesInLua:updateMoodleIconType(newIconType)
+    self.currentMoodleIconSet = newIconType
+end
+
+--[[END OF REGISTER ICONS]]--
+
+
 
 function ISMoodlesInLua:getTexture(path)
     -- Check if the texture is already cached
@@ -188,9 +254,6 @@ function ISMoodlesInLua:getMoodleSize()
     return self.moodleSizes[moodleSize] or self.defaultMoodleSize
 end
 
-function ISMoodlesInLua:updateMoodleBorderType(newType)
-    self.currentMoodleBorderSet = newType
-end
 
 function ISMoodlesInLua:drawMoodleTooltip(moodles, moodleId, moodleX, moodleY)
     local moodleSize = self:getMoodleSize()
@@ -227,7 +290,7 @@ function ISMoodlesInLua:render()
 
     local moodleSize = self:getMoodleSize()
     local x, y = moodlesUI:getAbsoluteX(), moodlesUI:getAbsoluteY()
-    local x, y = x + self.options.offsetX, y + self.options.offsetY
+    local x, y = x + self.options.moodleOffsetX, y + self.options.moodleOffsetY
 
     local player = self.useCharacter
     if player and player:getMoodles() then
@@ -322,8 +385,8 @@ function ISMoodlesInLua:render()
                 local borderTexturePath = self:getBorderTexturePath(goodBadNeutralId, moodleLevel)
                 local borderTexture = self:getTexture(borderTexturePath)
 
-                local moodleTexturePath = tostring(moodleType)
-                local moodleTexture = self:getTexture(self.moodlePaths[moodleTexturePath])
+                local iconTexturePath = self:getIconTexturePath(moodleType)
+                local iconTexture = self:getTexture(iconTexturePath)
 
                 -- Get the original dimensions of the Border texture
                 local realBorderWidth = borderTexture:getWidth()
@@ -336,12 +399,12 @@ function ISMoodlesInLua:render()
                 local scaledBorderHeight = realBorderHeight * scaleFactor
 
                 -- Calculate distance with scaling
-                local moodleOffsetX = math.floor(self.options.moodleOffsetX * scaleFactor)
-                local moodleOffsetY = math.floor(self.options.moodleOffsetY * scaleFactor)
+                local iconOffsetX = math.floor(self.options.iconOffsetX * scaleFactor)
+                local iconOffsetY = math.floor(self.options.iconOffsetY * scaleFactor)
 
-                if borderTexture then
+                if borderTexture then -- TODO add later support for custom color background
                     UIManager.DrawTexture(borderTexture, x + oscillationOffset, y, scaledBorderWidth, scaledBorderHeight, self.options.moodleAlpha) -- border
-                    UIManager.DrawTexture(moodleTexture, x + moodleOffsetX + oscillationOffset, y + moodleOffsetY, moodleSize, moodleSize, self.options.moodleAlpha) -- moodle
+                    UIManager.DrawTexture(iconTexture, x + iconOffsetX + oscillationOffset, y + iconOffsetY, moodleSize, moodleSize, self.options.moodleAlpha) -- moodle icon
                 end
 
                 -- Draw moodle tooltip on mouse hover
@@ -385,30 +448,52 @@ Events.OnCreatePlayer.Add(updateCharacter)
 
 local MILOptions = PZAPI.ModOptions:create("MoodlesInLua", getText("Moodles In Lua"))
 
-local borderkey = "MoodleBorderSet"
-local uiName = getText("Border texture pack:")
+local borderKey = "MoodleBorderSet"
+local borderName = getText("Border texture pack:")
+
+local iconKey = "MoodleIconSet"
+local iconName = getText("Moodle texture pack:")
 
 BorderTextureOptions = {
     [1] = "Default",
 }
 
+IconTextureOptions = {
+    [1] = "Default",
+}
 
-local MoodleBorderSetDropdown = MILOptions:addComboBox(borderkey, uiName, "tooltip")
+
+local MoodleBorderSetDropdown = MILOptions:addComboBox(borderKey, borderName, "tooltip")
 MoodleBorderSetDropdown:addItem("Default", true)
 
+local MoodleIconSetDropdown = MILOptions:addComboBox(iconKey, iconName, "tooltip")
+MoodleIconSetDropdown:addItem("Default", true)
+
 function MILOptions:apply()
-    -- Release textures from the previous moodle set
+    -- Release textures from the previous texture set / Border
     if ISMoodlesInLuaHandle.currentMoodleBorderSet then
         ISMoodlesInLuaHandle:clearTextureCache()
     end
 
-    -- Update to the new moodle set
-    local selectedIndex = self:getOption("MoodleBorderSet"):getValue()
-    local newType = BorderTextureOptions[selectedIndex]
-    ISMoodlesInLuaHandle:updateMoodleBorderType(newType)
+    -- Update to the new border set
+    local selectedBorderIndex = self:getOption("MoodleBorderSet"):getValue()
+    local newBorderType = BorderTextureOptions[selectedBorderIndex]
+    ISMoodlesInLuaHandle:updateMoodleBorderType(newBorderType)
 
     -- Retrieve options for the current texture set
     local options = ISMoodlesInLuaHandle:getBorderTextureOptions()
+
+    ----
+
+    -- Release textures from the previous texture set / Icon
+    if ISMoodlesInLuaHandle.currentMoodleIconSet then
+        ISMoodlesInLuaHandle:clearTextureCache()
+    end
+
+    -- Update to the new icon set
+    local selectedIconIndex = self:getOption("MoodleIconSet"):getValue()
+    local newIconType = IconTextureOptions[selectedIconIndex]
+    ISMoodlesInLuaHandle:updateMoodleIconType(newIconType)
 
     -- Update options
     ISMoodlesInLuaHandle:applyOptions(options)
