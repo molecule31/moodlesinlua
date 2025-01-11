@@ -1,0 +1,9 @@
+name=Quarter Border For Moodles [Build 42]
+id=quarterbordermoodles
+description=Blah blah description.
+poster=poster.png
+icon=quartericon.png
+author=molecule31
+require=\moodlesinlua
+versionMin=42.0.0
+modversion=6

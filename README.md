@@ -1,29 +1,16 @@
 # moodlesinlua
 Moodles In Lua is a mod for Project Zomboid that changes the way moodles works, it disables the rendering of the vanilla system and draws a new one with a more friendly API for modifying textures, as well as some new features and bug fixes
 
-MIL 6 version hierarchy:
-```
-MoodlesInLua/
-├── Contents
-│   └── mods
-│       └── MoodlesInLua
-│           ├── 42
-│           │   ├── media
-│           │   │   └── lua
-│           │   │       ├── client 
-│           │   │       │   ├── MoodlesIn.lua
-│           │   │       │   └── MoodlesInModMenu.lua
-│           │   │       └── shared
-│           │   │           └── Translate
-│           │   │               └── EN
-│           │   │                   └── UI_EN.txt
-│           │   ├── mod.info
-│           │   ├── moodlesicon.png
-│           │   └── poster.png
-│           └── common
-│               └── media
-├── preview.png
-└── workshop.txt
+### TODO:
+- Stack positioning 
+- Advanced MF support
 
-13 directories, 8 files
-```
+### Exposed options:
+- ```moodleOffsetX``` Adjusts the horizontal position of moodles (X-axis offset)<br>
+- ```moodleOffsetX``` Adjusts the vertical position of moodles (Y-axis offset)<br>
+- ```iconOffsetX``` Adjusts the horizontal position of the moodle icon (X-axis offset)<br>
+- ```iconOffsetY``` Adjusts the vertical position of the moodle icon (Y-axis offset)<br>
+- ```moodleAlpha``` Controls the overall opacity of the moodles (Alpha transparency level)<br>
+- ```moodlesDistance``` Sets the space between moodles<br>
+- ```tooltipPadding``` Defines the padding inside the tooltip for spacing around the text<br>
+- ```tooltipOffsetX```  Can be used to add a larger gap between the tooltip and moodle<br>

@@ -1,8 +1,8 @@
-name=Moodles in lua [Build 42]
+name=Moodles in lua
 id=moodlesinlua
 description=Disables rendering of vanilla moodles and draws new ones on top of them, does not work if you have only turned on this mod
 poster=poster.png
 icon=moodlesicon.png
-author=molecule31
+author=molecule31; Dreamweave
 versionMin=42.0.0
-modversion=6
+modversion=7
