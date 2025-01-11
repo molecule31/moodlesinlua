@@ -126,17 +126,17 @@ function ISMoodlesInLua:registerBorderTextureSet(name, path, options)
 end
 
 function ISMoodlesInLua:getBorderTexturePath(goodBadNeutralId, moodleLevel)
-    local basePath = "media/ui/MIL/Default"
+    local defaultPath = "media/ui/MIL/Default"
 
     -- Find the registered texture set
     for _, set in ipairs(self.borderTextureSets) do
         if set.name == self.currentMoodleBorderSet then
-            basePath = set.path
+            defaultPath = set.path
             break
         end
     end
 
-    return string.format("%s/%s_%d.png", basePath, goodBadNeutralId == 1 and "Good" or goodBadNeutralId == 2 and "Bad" or "Neutral", moodleLevel)
+    return string.format("%s/%s_%d.png", defaultPath, goodBadNeutralId == 1 and "Good" or goodBadNeutralId == 2 and "Bad" or "Neutral", moodleLevel)
 end
 
 function ISMoodlesInLua:getBorderTextureOptions()
@@ -189,18 +189,19 @@ function ISMoodlesInLua:registerIconTextureSet(name, path)
 end
 
 function ISMoodlesInLua:getIconTexturePath(moodleType)
-    local basePath = "media/ui/MIL/Default"
+    local defaultPath = "media/ui/MIL/Default"
     local iconName = self.iconPaths[tostring(moodleType)]
 
     -- Find the registered texture set
     for _, set in ipairs(self.iconTextureSets) do
         if set.name == self.currentMoodleIconSet then
-            basePath = set.path
+            defaultPath = set.path
             break
         end
     end
 
-    return string.format("%s/%s.png", basePath, iconName)
+    local path = (self.currentMoodleIconSet == "Disabled") and "media/ui/Moodles" or defaultPath
+    return string.format("%s/%s.png", path, iconName)
 end
 
 function ISMoodlesInLua:updateMoodleIconType(newIconType)
@@ -459,7 +460,8 @@ BorderTextureOptions = {
 }
 
 IconTextureOptions = {
-    [1] = "Default",
+    [1] = "Disabled",
+    [2] = "Default",
 }
 
 MILOptions:addDescription("Select custom textures for moodles")
@@ -468,6 +470,7 @@ local MoodleBorderSetDropdown = MILOptions:addComboBox(borderKey, borderName, "t
 MoodleBorderSetDropdown:addItem("Default", true)
 
 local MoodleIconSetDropdown = MILOptions:addComboBox(iconKey, iconName, "tooltip")
+MoodleIconSetDropdown:addItem("Disabled", false)
 MoodleIconSetDropdown:addItem("Default", true)
 
 MILOptions:addDescription("If new packs do not appear in the list, check if they are listed under the Moodles In Lua mod in Mod Order menu")
