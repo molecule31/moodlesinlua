@@ -206,7 +206,7 @@ function ISMoodlesInLua:getIconTexturePath(moodleType)
         end
     end
 
-    local path = (self.currentMoodleIconSet == "Disabled") and "media/ui/Moodles" or defaultPath
+    local path = (self.currentMoodleIconSet == "Disabled") and "media/ui/Moodles/128" or defaultPath
     return string.format("%s/%s.png", path, iconName)
 end
 
