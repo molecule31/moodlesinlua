@@ -66,6 +66,12 @@ function ISMoodlesInLua:new()
     o.OscilatorStep = 0;
 
     o.useCharacter = nil
+    o.playerNum = 0
+
+    if o.useCharacter and o.useCharacter.getPlayerNum then
+        o.playerNum = o.useCharacter:getPlayerNum()
+    end
+
     o.active = false
 
     o.borderTextureSets = {}
@@ -289,13 +295,19 @@ function ISMoodlesInLua:render()
     --Disables vanilla moodle system
     moodlesUI:setDefaultDraw(false)
 
-    local moodleSize = self:getMoodleSize()
-    local x, y = moodlesUI:getAbsoluteX(), moodlesUI:getAbsoluteY()
-    local x, y = x + self.options.moodleOffsetX, y + self.options.moodleOffsetY
-
     local player = self.useCharacter
+
     if player and player:getMoodles() then
         local moodles = player:getMoodles()
+
+        local moodleSize = self:getMoodleSize()
+        local x = getPlayerScreenLeft(self.playerNum) + getPlayerScreenWidth(self.playerNum) - 10 - moodleSize
+        local y = getPlayerScreenTop(self.playerNum) + 120
+
+        -- Add offsets
+        x = x + self.options.moodleOffsetX
+        y = y + self.options.moodleOffsetY
+
         for moodleId = 0, moodles:getNumMoodles() - 1 do
             local moodleType = MoodleType.FromIndex(moodleId)
             local moodleLevel = moodles:getMoodleLevel(moodleType)
