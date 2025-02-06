@@ -527,6 +527,22 @@ end
 
 
 
+--[[LIFESTYLE COMPATIBILITY]]--
+
+require "LSMoodleManager"
+
+if LSMoodleManager ~= nil then
+
+local alignmentTable = { Good = 1, Bad = 2, }
+
+  function LSgetMoodleBkg(player, moodleLevel, moodleName)
+      local alignment = player:getModData().LSMoodles[moodleName].Alignment
+      local g = alignmentTable[alignment] or 0
+      local texturePath = ISMoodlesInLuaHandle:getBorderTexturePath(g, moodleLevel)
+      return texturePath
+  end
+
+end
 
 --[[MOODLE FRAMEWORK COMPATIBILITY]]--
 
@@ -551,6 +567,66 @@ if MF ~= nil then
             end
         end
     end
+
+    -- I added this function because moodles in lua can show FoodEaten on all levels, so it's just copying the code and removing one condition :p
+    function MF.ISMoodle:getXYPosition()
+        local size = MF.getSize()
+        if size ~= self.width then
+            self:setWidth(size);
+            self:updateTextures(size)
+        end
+
+        local x = getPlayerScreenLeft(self.playerNum) + getPlayerScreenWidth(self.playerNum) - MF.xOffset - self:getWidth()
+        local y = getPlayerScreenTop(self.playerNum) + MF.yOffset
+        local distY = 10 + MF.defaultWidth * MF.scale
+        local numMoodles = self.char:getMoodles():getNumMoodles();
+
+        if self.disable then
+            if MF.verbose then print("MF.ISMoodle:getXYPosition while disabled. "..self.name) end;
+            return x,y;
+        end
+
+        if self:getLevel() ~= 0 then--bypass when not displayed (this is bad design)
+            for i = 0, numMoodles-1 do--vanilla moodles first
+                local moodleType = MoodleType.FromIndex(i)
+                local moodleLevel = self.char:getMoodles():getMoodleLevel(moodleType)
+                if moodleLevel ~= 0 then
+                    y = y + distY;
+                end
+            end
+
+            local aiteronMM = self.char:getModData().MoodleManager;--aiteron moodles second
+            if aiteronMM and aiteronMM.moodles then
+                local nbMoodlesAiteron = 0
+                for _, moodleObj in pairs(aiteronMM.moodles) do
+                    --print("MF.ISMoodle:AiteronCompatibility MoodleManager "..tostring(_ or 'nil').." "..tostring(moodleObj or 'nil'));
+                    if moodleObj.getLevel then--there is a fake item (_ == 1) in moodles that has no getLevel
+                        local lvl = moodleObj:getLevel()
+                        if lvl > 0 then
+                            nbMoodlesAiteron = nbMoodlesAiteron + 1
+                            y = y + distY;
+                        end
+                    end
+                end
+                --print("MF.ISMoodle:AiteronCompatibility MoodleManager "..nbMoodlesAiteron.." moodles");
+            else
+                --print("MF.ISMoodle:AiteronCompatibility no MoodleManager");
+            end
+
+            for k, v in pairs(self.char:getModData().Moodles) do--modded moodles then
+                if k == self.name then
+                    break--found
+                else
+                    if v.Level ~= 0 then--this is why we need to share level in player mod data
+                        y = y + distY;
+                    end
+                end
+            end
+        end
+
+        return x, y
+    end
+    -- end of MF.ISMoodle:getXYPosition
 
     function MF.ISMoodle.new(self, moodleName, character)
         local o = oldNew(self, moodleName, character)
