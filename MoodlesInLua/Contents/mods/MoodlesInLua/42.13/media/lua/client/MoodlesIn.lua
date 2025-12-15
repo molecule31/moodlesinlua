@@ -98,6 +98,27 @@ function ISMoodlesInLua:applyOptions(options)
     end
 end
 
+-- [[HIDE MOODLES]]
+local hidden = {}
+local function hideMoodles()
+local UIList = UIManager.getUI()
+if not UIList then return end
+
+    for i = 0, UIList:size() - 1 do
+        local ui = UIList:get(i)
+
+        if ui and not hidden[ui] then
+            if tostring(ui):find("MoodlesUI") then
+                if ui.setX and ui.setY then
+                    ui:setX(-4096)
+                    ui:setY(-4096)
+                    hidden[ui] = true
+                end
+            end
+        end
+    end
+end
+
 --[[REGISTER BORDERS]]--
 
 function ISMoodlesInLua:registerBorderTextureSet(name, path, options)
@@ -286,15 +307,10 @@ function ISMoodlesInLua:drawMoodleTooltip(moodle, moodleType, moodleX, moodleY)
     self:drawTextRight(description, moodleX - textPadding - self.options.tooltipOffsetX, moodleY + titleHeight + self.options.tooltipPadding * 2 + anchorTooltipOnMoodle, 1, 1, 1, 0.7)
 end
 
+
 function ISMoodlesInLua:render()
 
-    local moodlesUI = MoodlesUI.getInstance()
-
-    --Ensures ISMoodlesInLua and MoodlesUI are active
-    if not self.active or not moodlesUI then return end
-
-    --Disables vanilla moodle system
-    moodlesUI:setDefaultDraw(false)
+    if not self.active then return end
 
     local player = getPlayer()
 
@@ -441,8 +457,6 @@ function ISMoodlesInLua:render()
 end
 
 
-
-
 --[[HANDLER]]--
 
 ISMoodlesInLuaHandle = ISMoodlesInLua:new()
@@ -452,6 +466,7 @@ local function initializeMIL()
     ISMoodlesInLuaHandle:initialise()
     ISMoodlesInLuaHandle:addToUIManager()
     ISMoodlesInLuaHandle:start()
+
 end
 Events.OnGameStart.Add(initializeMIL)
 
@@ -460,6 +475,9 @@ local function updateCharacter(id,player)
     ISMoodlesInLuaHandle:setCharacter(player)
 end
 Events.OnCreatePlayer.Add(updateCharacter)
+
+-- Hide moodles on each ui draw (this is expensive? but other ways seems too buggy)
+Events.OnPreUIDraw.Add(hideMoodles)
 
 
 
