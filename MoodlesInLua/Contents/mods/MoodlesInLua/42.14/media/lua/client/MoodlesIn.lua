@@ -5,7 +5,7 @@ function ISMoodlesInLua:new()
     setmetatable(o, self)
     self.__index = self
 
-    o.defaultMoodleSize = 48
+    o.defaultMoodleSize = 32
     o.moodleSizes = {[1] = 32,[2] = 48,[3] = 64,[4] = 80,[5] = 96,[6] = 128}
 
     o.iconPaths = {
@@ -274,8 +274,8 @@ function ISMoodlesInLua:getMoodleSize()
 
      -- Auto size
     if moodleSize == 7 then
-        local fontEnum = UIFont.Small
-        return getTextManager():getFontFromEnum(fontEnum):getLineHeight()*3
+        local FontSize = 0.5+0.5*getCore():getOptionFontSizeReal()
+        return self.defaultMoodleSize * FontSize
     end
 
     -- Preset size
@@ -558,16 +558,20 @@ require "LSMoodleManager"
 
 if LSMoodleManager ~= nil then
 
-local alignmentTable = { Good = 1, Bad = 2, }
+    local alignmentTable = { Good = 1, Bad = 2, }
 
-  function LSgetMoodleBkg(player, moodleLevel, moodleName)
-      local alignment = player:getModData().LSMoodles[moodleName].Alignment
-      local g = alignmentTable[alignment] or 0
-      local texturePath = ISMoodlesInLuaHandle:getBorderTexturePath(g, moodleLevel)
-      return texturePath
-  end
+    function LSgetMoodleBkg(player, moodleLevel, moodleName)
+    local alignment = player:getModData().LSMoodles[moodleName].Alignment
+    local g = alignmentTable[alignment] or 0
+    local moodleBkg = ISMoodlesInLuaHandle:getBorderTexturePath(g, moodleLevel)
+    local moodleBkgBorder = "media/ui/MIL/LH_BkgBorder.png" -- FIXME there should be better solution
+    local color = 1
+
+    return moodleBkg, moodleBkgBorder, color
+    end
 
 end
+
 
 --[[MOODLE FRAMEWORK COMPATIBILITY]]--
 
@@ -593,69 +597,6 @@ if MF ~= nil then
         end
     end
 
-    -- I should really revisit this part in future (hopefully)
-    function MF.ISMoodle:getXYPosition()
-    local size = MF.getSize()
-    if size ~= self.width then
-        self:setWidth(size);
-    self:updateTextures(size)
-    end
-
-    local x = getPlayerScreenLeft(self.playerNum) + getPlayerScreenWidth(self.playerNum) - MF.xOffset - self:getWidth()
-    local y = getPlayerScreenTop(self.playerNum) + MF.yOffset
-    local distY = 10 + MF.defaultWidth * MF.scale
-    local moodlesValuesForType = Registries.MOODLE_TYPE:values()
-    local numMoodles = moodlesValuesForType:size()
-    local moodles = self.char:getMoodles()
-
-    if self.disable then
-        if MF.verbose then print("MF.ISMoodle:getXYPosition while disabled. "..self.name) end;
-        return x,y;
-    end
-
-    if self:getLevel() ~= 0 then--bypass when not displayed (this is bad design)
-        for i = 0, numMoodles-1 do--vanilla moodles first
-            local moodleType = moodlesValuesForType:get(i)
-            local moodleLevel = moodles:getMoodleLevel(moodleType)
-            -- Using the original framework's conditional check for stacking position:
-            if moodleLevel ~= 0 and moodleType ~= MoodleType.FOOD_EATEN or moodleLevel >= 3 then
-                y = y + distY;
-            end
-            end
-
-            local aiteronMM = self.char:getModData().MoodleManager;--aiteron moodles second
-            if aiteronMM and aiteronMM.moodles then
-                local nbMoodlesAiteron = 0
-                for _, moodleObj in pairs(aiteronMM.moodles) do
-                    --print("MF.ISMoodle:AiteronCompatibility MoodleManager "..tostring(_ or 'nil').." "..tostring(moodleObj or 'nil'));
-                if moodleObj.getLevel then--there is a fake item (_ == 1) in moodles that has no getLevel
-                    local lvl = moodleObj:getLevel()
-                        if lvl > 0 then
-                            nbMoodlesAiteron = nbMoodlesAiteron + 1
-                                y = y + distY;
-                            end
-                        end
-                    end
-                    --print("MF.ISMoodle:AiteronCompatibility MoodleManager "..nbMoodlesAiteron.." moodles");
-                else
-                    --print("MF.ISMoodle:AiteronCompatibility no MoodleManager");
-                end
-
-                for k, v in pairs(self.char:getModData().Moodles) do--modded moodles then
-                    if k == self.name then
-                        break--found
-                        else
-                            if v.Level ~= 0 then --this is why we need to share level in player mod data
-                                y = y + distY;
-                        end
-                    end
-                end
-            end
-
-        return x, y
-    end
-
-    -- end of MF.ISMoodle:getXYPosition
 
     function MF.ISMoodle.new(self, moodleName, character)
         local o = oldNew(self, moodleName, character)
