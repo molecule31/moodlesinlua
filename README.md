@@ -2,8 +2,7 @@
 Moodles In Lua is a mod for Project Zomboid that changes the way moodles works, it disables the rendering of the vanilla system and draws a new one with a more friendly API for modifying textures, as well as some new features and bug fixes
 
 ### TODO:
-- Stack positioning 
-- Advanced MF support
+- Split screen
 
 ### Exposed options:
 - ```moodleOffsetX``` Adjusts the horizontal position of moodles (X-axis offset)<br>
